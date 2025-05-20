@@ -47,6 +47,7 @@
           </div>
         </div>
       </div>
+      <div><button @click="logout" class="logout-button">Sair</button></div>
 </template>
 
 <script>
@@ -132,6 +133,7 @@ export default {
 
       try {
         if (this.modoEdicao) {
+          
           form.append('_method', 'PUT');
           await axios.post(`http://localhost:8000/api/produto/${this.produtoForm.id}`, form, {
             headers: {
@@ -139,6 +141,7 @@ export default {
             }
           });
           alert('Produto atualizado com sucesso!');
+        
         } else {
           await axios.post(`http://localhost:8000/api/produto`, form, {
             headers: {
@@ -146,6 +149,7 @@ export default {
             }
           });
           alert('Produto cadastrado com sucesso!');
+        
         }
 
         this.cancelarFormulario();
@@ -154,8 +158,20 @@ export default {
       } catch (error) {
         console.error('Erro ao salvar produto:', error);
         alert('Erro ao salvar produto.');
+      
       }
     },
+
+    comprar(produto){//Implementar se necessario
+      alert (`Voce comprou o produto: ${produto.nome}, manda o pix`);  
+    },
+
+    logout() {
+    // Remover token do localStorage, autorizacao e voltar pra pagina inicial
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+      this.$router.push('/');
+    }
   }
 }
 </script>
