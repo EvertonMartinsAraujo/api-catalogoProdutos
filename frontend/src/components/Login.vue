@@ -3,7 +3,8 @@
                
       <div class="login-container" >
         <img src="/Logo.png" alt="ModelSell" class="logo" />
-          
+          <h3>Modelsell</h3>
+          <h2>Seu catalogo de vendas</h2>
             <div class="login-box">
                 <h2>Login</h2>
                 <form method="POST" @submit.prevent="login($event)">
