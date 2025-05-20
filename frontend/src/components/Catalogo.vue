@@ -9,6 +9,10 @@
       <input v-model="termoBusca" type="text" placeholder="Pesquisar produtos..."/>
       </div>
     </header>
+    <div style="width: 100%; text-align: center; margin-top: 40px;" v-if="user && user.role === 'admin'">
+     <button @click="adicionarProd">Adicionar Produto</button>
+    </div>
+
     <div class="produto-container" v-for="produto in produtosFiltrados" :key="produto.id"><br>
       <div>
         <img :src="`http://localhost:8000/${produto.imagem}`" v-if="produto.imagem" class="produto-imagem"/>
@@ -24,38 +28,40 @@
           <button @click="deletar(produto.id)">Excluir</button>
         </div>
         
-        <!-- tela para edição-->
-        <div v-if="prodEditando" class="modal-overlay">
-          <div class="modal-content">
-            <h2>Editar Produto</h2>
-              <label>Nome:</label>
-              <input v-model="prodEditando.nome"><br>
-              <label>Descrição:</label>
-              <input v-model="prodEditando.descricao"><br>
-              <label>Preço:</label>
-              <input type="number" v-model="prodEditando.preco"><br>
-              <label>Imagem:</label>
-              <input type="file" @change="handleImagemChange"><br><!--edição imagem-->
-              <button @click="salvarEdicao">Salvar</button>
-              <button @click="cancelarEdicao">Cancelar</button>
+        <!-- tela para adição ou edição-->
+      <div v-if="produtoForm" class="modal-overlay">
+      <div class="modal-content">
+      <h2>{{ modoEdicao ? 'Editar Produto' : 'Adicionar Produto' }}</h2>
+        <label>Nome:</label>
+        <input v-model="produtoForm.nome"><br>
+        <label>Descrição:</label>
+        <input v-model="produtoForm.descricao"><br>
+        <label>Preço:</label>
+        <input type="number" v-model="produtoForm.preco"><br>
+        <label>Imagem:</label>
+        <input type="file" @change="handleImagemChange"><br>
+    <button @click="salvarProduto">{{ modoEdicao ? 'Salvar Alterações' : 'Cadastrar Produto' }}</button>
+    <button @click="cancelarFormulario">Cancelar</button>
+  </div>
+</div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 </template>
 
 <script>
 import axios from 'axios'
 
 export default {
+
   data() {
     return {
       produtos: [],
-      prodEditando:null,
+      produtoForm :null,
       imagemSelecionada: null,
       user: {},
       termoBusca: '',
+      modoEdicao: false,
     }
   },
 
@@ -84,74 +90,73 @@ export default {
   },
 
   methods: {
-    async adicionar(id) {
-      await axios.put(`http://localhost:8000/api/produto/${id}`)
-      this.produtos = this.produtos.filter( p => p.id)
-    },
-
     async deletar(id) {
       await axios.delete(`http://localhost:8000/api/produto/${id}`)
       this.produtos = this.produtos.filter(p => p.id !== id)
     },
 
-    editar(produtos) {
-      this.prodEditando = {
-        id: produtos.id,
-        nome: produtos.nome,
-        descricao: produtos.descricao,
-        preco: produtos.preco,
-    }},
+    adicionarProd() {
+      this.produtoForm = {
+        nome: '',
+        descricao: '',
+        preco: '',
+      };
+      this.imagemSelecionada = null;
+      this.modoEdicao = false;
+    },
 
-      handleImagemChange(event) {
-      this.imagemSelecionada = event.target.files[0]
-      },
+    editar(produto) {
+      this.produtoForm = { ...produto };
+      this.imagemSelecionada = null;
+      this.modoEdicao = true;
+    },
 
-    async salvarEdicao(){
+    cancelarFormulario() {
+      this.produtoForm = null;
+      this.imagemSelecionada = null;
+      this.modoEdicao = false;
+    },
 
-      try{
-        const editado = new FormData();
-        editado.append('id', this.prodEditando.id);
-        editado.append('nome', this.prodEditando.nome);
-        editado.append('descricao', this.prodEditando.descricao);
-        editado.append('preco', this.prodEditando.preco);
-        editado.append('_method', 'PUT');
-        
-        if(this.imagemSelecionada){
-          editado.append('imagem',this.imagemSelecionada);
+    handleImagemChange(event) {
+      this.imagemSelecionada = event.target.files[0];
+    },
+
+    async salvarProduto() {
+      const form = new FormData();
+      form.append('nome', this.produtoForm.nome);
+      form.append('descricao', this.produtoForm.descricao);
+      form.append('preco', this.produtoForm.preco);
+      if (this.imagemSelecionada) {
+        form.append('imagem', this.imagemSelecionada);
+      }
+
+      try {
+        if (this.modoEdicao) {
+          form.append('_method', 'PUT');
+          await axios.post(`http://localhost:8000/api/produto/${this.produtoForm.id}`, form, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          alert('Produto atualizado com sucesso!');
+        } else {
+          await axios.post(`http://localhost:8000/api/produto`, form, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          alert('Produto cadastrado com sucesso!');
         }
 
-        await axios.post(`http://localhost:8000/api/produto/${this.prodEditando.id}`, editado, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-
-        //Retorno ok
-        alert('Cadastro Atualizado')
-        this.prodEditando = null
-        this.imagemSelecionada = null
+        this.cancelarFormulario();
         this.recarregarProdutos();
 
-      }catch (erro){//deu ruim
-        console.error("Erro ao atualizar cadastro:", erro)
-        alert('Erro ao atualizar cadastro')
-        this.prodEditando = null;
+      } catch (error) {
+        console.error('Erro ao salvar produto:', error);
+        alert('Erro ao salvar produto.');
       }
     },
-    async cancelarEdicao(){
-      this.prodEditando=null
-    },
-    
-    async recarregarProdutos() {
-      const prodResp = await axios.get('http://localhost:8000/api/produto')
-      this.produtos = prodResp.data
-    },
-    comprar(produto) {
-      alert(`Produto selecionado: ${produto.nome}`);
-    }
-
   }
-  
 }
 </script>
 
