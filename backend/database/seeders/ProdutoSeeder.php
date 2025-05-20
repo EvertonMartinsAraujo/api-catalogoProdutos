@@ -37,5 +37,35 @@ class ProdutoSeeder extends Seeder
             'preco' => '2000',
             'imagem' => ''
         ]);
+        Produto::create([
+            'nome' => 'Conjunto mesa',
+            'descricao' => 'Conjunto Mesa e Cadeira 6 lugares',
+            'preco' => '1100',
+            'imagem' => 'images/conjunto_mesa_6lugares.png'
+        ]);
+        Produto::create([
+            'nome' => 'Cama Box Solteiro',
+            'descricao' => 'Cama Box Solteiro',
+            'preco' => '900',
+            'imagem' => 'images/cama_box_solteiro.png'
+        ]);
+        Produto::create([
+            'nome' => 'Cama Box Casal',
+            'descricao' => 'Cama Box Casal',
+            'preco' => '1500',
+            'imagem' => 'images/cama_box_casal.png'
+        ]);
+        Produto::create([
+            'nome' => 'Cama Beliche Solteiro',
+            'descricao' => 'Cama Beliche Solteiro',
+            'preco' => '1600',
+            'imagem' => 'cama_beliche_solteiro'
+        ]);
+        Produto::create([
+            'nome' => 'Televisao',
+            'descricao' => 'Televisao 55 polegadas',
+            'preco' => '2000',
+            'imagem' => ''
+        ]);
     }
 }
